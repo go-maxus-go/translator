@@ -23,17 +23,19 @@ MainWindow::MainWindow(QWidget *parent)
     ui->toComboBox->setCurrentIndex(2);
 
     connect(ui->translateButton, &QPushButton::pressed, this, [this](){
-
-        QUrl url("https://api.mymemory.translated.net/get");
-        QUrlQuery query;
-
         auto inputText = ui->inputText->toPlainText();
+        if (inputText.isEmpty())
+            return;
+
         auto languageFrom = ui->fromComboBox->currentText();
         auto languageTo = ui->toComboBox->currentText();
 
+        QUrlQuery query;
         query.addQueryItem("q", inputText);
         auto languagePair = QString("%1|%2").arg(languageFrom, languageTo);
         query.addQueryItem("langpair", languagePair);
+
+        QUrl url("https://api.mymemory.translated.net/get");
         url.setQuery(query.query());
 
         QNetworkRequest request(url);
@@ -45,7 +47,9 @@ MainWindow::MainWindow(QWidget *parent)
             QJsonObject jsonObject = jsonResponse.object();
             auto responseData = jsonObject["responseData"].toObject();
             auto translation = responseData["translatedText"].toString();
-            auto translationLines = translation.split("&#10; ");
+            auto translationLines = translation.split("&#10;");
+            for (int i = 0; i < translationLines.size(); ++i)
+                translationLines[i] =  translationLines[i].trimmed();
             auto translationPretty = translationLines.join("\n");
             ui->translationText->setText(translationPretty);
         });
