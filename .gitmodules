@@ -1,0 +1,12 @@
+[submodule "3rdparty/FakeIt"]
+	path = 3rdparty/FakeIt
+	url = git@github.com:eranpeer/FakeIt.git
+[submodule "3rdparty/Catch2"]
+	path = 3rdparty/Catch2
+	url = git@github.com:catchorg/Catch2.git
+[submodule "3rdparty/mockitopp"]
+	path = 3rdparty/mockitopp
+	url = git@github.com:tpounds/mockitopp.git
+[submodule "3rdparty/googletest"]
+	path = 3rdparty/googletest
+	url = git@github.com:google/googletest.git
