@@ -1,11 +1,18 @@
+#include <QApplication>
+
+#include "Tags.h"
+#include "Module.h"
 #include "MainWindow.h"
 
-#include <QApplication>
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
-    return a.exec();
+    QApplication app(argc, argv);
+
+    auto context = createContext();
+    auto mainWindow = context.resolve<MainWindowTag>();
+
+    mainWindow->show();
+
+    return app.exec();
 }

@@ -12,6 +12,10 @@ HEADERS = $$files(*.h, true) \
     LanguageProvider.h
 FORMS = $$files(*.ui, true)
 
+INCLUDEPATH += \
+    $$PWD/impl \
+    ../3rdparty/di/include
+
 # Default rules for deployment.
 unix {
     target.path = $$[QT_INSTALL_PLUGINS]/generic

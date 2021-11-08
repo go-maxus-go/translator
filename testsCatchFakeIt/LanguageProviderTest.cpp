@@ -1,6 +1,6 @@
 #include "LanguageProvider.h"
 
-#include <catch2/catch.hpp>
+#include <catch.hpp>
 
 
 TEST_CASE("List of available languages is not empty")

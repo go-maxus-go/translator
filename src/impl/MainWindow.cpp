@@ -9,18 +9,20 @@
 #include <QJsonDocument>
 #include <QNetworkReply>
 
+#include "ILanguageProvider.h"
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+
+MainWindow::MainWindow(LanguageProviderPtr languageProvider)
+    : QMainWindow(nullptr)
+    , ui(std::make_unique<Ui::MainWindow>())
 {
     ui->setupUi(this);
-    const auto languages = QStringList({"en", "ru", "de", "fr"});
+    const auto languages = languageProvider->availableLanguages();
     ui->fromComboBox->insertItems(0, languages);
     ui->toComboBox->insertItems(0, languages);
 
     ui->fromComboBox->setCurrentIndex(0);
-    ui->toComboBox->setCurrentIndex(2);
+    ui->toComboBox->setCurrentIndex(1);
 
     connect(ui->translateButton, &QPushButton::pressed, this, [this](){
         auto inputText = ui->inputText->toPlainText();
@@ -39,7 +41,6 @@ MainWindow::MainWindow(QWidget *parent)
         url.setQuery(query.query());
 
         QNetworkRequest request(url);
-
         auto reply = networkAccessManager.get(request);
         connect(reply, &QNetworkReply::finished, this, [this, reply](){
             auto data = reply->readAll();
@@ -56,7 +57,4 @@ MainWindow::MainWindow(QWidget *parent)
     });
 }
 
-MainWindow::~MainWindow()
-{
-    delete ui;
-}
+MainWindow::~MainWindow() = default;

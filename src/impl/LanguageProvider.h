@@ -10,7 +10,7 @@ public:
         : m_availableLanguages{"en", "de", "ru", "fr"}
     {}
 
-    QStringList availableLanguages() const
+    QStringList availableLanguages() const override
     {
         return m_availableLanguages;
     }

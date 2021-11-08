@@ -1,12 +1,15 @@
 TEMPLATE = app
 
+QT += core gui network widgets
 CONFIG += staticlib c++17
-CONFIG -= QT
 
 SOURCES = $$files(*.cpp, true)
 
 INCLUDEPATH += \
-    ../3rdparty/Catch2/single_include
+    ../src/impl \
+    ../3rdparty/di/include \
+    ../3rdparty/Catch2/single_include/catch2 \
+    ../3rdparty/FakeIt/single_header/catch
 
 # src library
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../src/release/ -lsrc

@@ -5,6 +5,9 @@ CONFIG += object_parallel_to_source
 
 SOURCES += main.cpp
 
+INCLUDEPATH += \
+    ../src/impl \
+    ../3rdparty/di/include
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
