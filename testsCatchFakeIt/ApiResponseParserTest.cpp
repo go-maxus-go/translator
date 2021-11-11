@@ -22,8 +22,8 @@ TEST_CASE("Parsing of a valid json gives a valid result")
 
     auto apiResponce = parser.parse(response);
 
-    REQUIRE(apiResponce.languageFrom == "en");
-    REQUIRE(apiResponce.languageTo == "de");
+    REQUIRE(apiResponce.sourceLanguage == "en");
+    REQUIRE(apiResponce.targetLanguage == "de");
     REQUIRE(apiResponce.source == "How are you?\n\nBad");
     REQUIRE(apiResponce.translation == "Wie geht es Ihnen?\n\nSchlecht");
 }

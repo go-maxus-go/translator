@@ -1,60 +1,72 @@
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
 
-#include <QUrl>
-#include <QList>
 #include <QString>
-#include <QUrlQuery>
-#include <QJsonObject>
-#include <QJsonDocument>
-#include <QNetworkReply>
+#include <QComboBox>
 
+#include "ITranslator.h"
 #include "ILanguageProvider.h"
 
 
-MainWindow::MainWindow(LanguageProviderPtr languageProvider)
+MainWindow::MainWindow(
+    TranslatorPtr translator,
+    LanguageProviderPtr languageProvider)
     : QMainWindow(nullptr)
-    , ui(std::make_unique<Ui::MainWindow>())
+    , SelfContainer<MainWindow>(this)
+    , m_ui(std::make_unique<Ui::MainWindow>())
+    , m_translator{std::move(translator)}
+    , m_languageProvider{std::move(languageProvider)}
 {
-    ui->setupUi(this);
-    const auto languages = languageProvider->availableLanguages();
-    ui->fromComboBox->insertItems(0, languages);
-    ui->toComboBox->insertItems(0, languages);
+    m_ui->setupUi(this);
 
-    ui->fromComboBox->setCurrentIndex(0);
-    ui->toComboBox->setCurrentIndex(1);
+    m_translator->attach(self());
 
-    connect(ui->translateButton, &QPushButton::pressed, this, [this](){
-        auto inputText = ui->inputText->toPlainText();
-        if (inputText.isEmpty())
-            return;
+    const auto languages = m_languageProvider->availableLanguages();
+    m_ui->fromComboBox->addItems(languages);
+    m_ui->toComboBox->addItems(languages);
+    updateUiLanguages();
 
-        auto languageFrom = ui->fromComboBox->currentText();
-        auto languageTo = ui->toComboBox->currentText();
-
-        QUrlQuery query;
-        query.addQueryItem("q", inputText);
-        auto languagePair = QString("%1|%2").arg(languageFrom, languageTo);
-        query.addQueryItem("langpair", languagePair);
-
-        QUrl url("https://api.mymemory.translated.net/get");
-        url.setQuery(query.query());
-
-        QNetworkRequest request(url);
-        auto reply = networkAccessManager.get(request);
-        connect(reply, &QNetworkReply::finished, this, [this, reply](){
-            auto data = reply->readAll();
-            QJsonDocument jsonResponse = QJsonDocument::fromJson(data);
-            QJsonObject jsonObject = jsonResponse.object();
-            auto responseData = jsonObject["responseData"].toObject();
-            auto translation = responseData["translatedText"].toString();
-            auto translationLines = translation.split("&#10;");
-            for (int i = 0; i < translationLines.size(); ++i)
-                translationLines[i] =  translationLines[i].trimmed();
-            auto translationPretty = translationLines.join("\n");
-            ui->translationText->setText(translationPretty);
-        });
+    connect(m_ui->translateButton, &QPushButton::pressed, this, [this](){
+        m_translator->translate(m_ui->inputText->toPlainText());
     });
+
+    connect(m_ui->fromComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+        this, [this](auto){ updateTranslatorLanguages(); });
+
+    connect(m_ui->toComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged),
+        this, [this](auto){ updateTranslatorLanguages(); });
 }
 
 MainWindow::~MainWindow() = default;
+
+void MainWindow::onLanguageChanged()
+{
+    updateUiLanguages();
+}
+
+void MainWindow::onTranslated(ApiResponse apiResponse)
+{
+    m_ui->translationText->setText(apiResponse.translation);
+}
+
+void MainWindow::updateUiLanguages()
+{
+    const auto languages = m_languageProvider->availableLanguages();
+
+    const auto fromIndex = languages.indexOf(m_translator->sourceLanguage());
+    m_ui->fromComboBox->setCurrentIndex(fromIndex);
+
+    const auto toIndex = languages.indexOf(m_translator->targetLanguage());
+    m_ui->toComboBox->setCurrentIndex(toIndex);
+}
+
+void MainWindow::updateTranslatorLanguages()
+{
+    const auto languages = m_languageProvider->availableLanguages();
+
+    const auto fromIndex = m_ui->fromComboBox->currentIndex();
+    m_translator->setSourceLanguage(languages[fromIndex]);
+
+    const auto toIndex = m_ui->toComboBox->currentIndex();
+    m_translator->setTargetLanguage(languages[toIndex]);
+}

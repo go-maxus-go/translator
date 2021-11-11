@@ -24,8 +24,8 @@ public:
         ApiResponse apiResponce;
         apiResponce.source = readField(match, "segment");
         apiResponce.translation = readField(match, "translation");
-        apiResponce.languageFrom = readField(match, "source");
-        apiResponce.languageTo = readField(match, "target");
+        apiResponce.sourceLanguage = readField(match, "source");
+        apiResponce.targetLanguage = readField(match, "target");
 
         return makePretty(std::move(apiResponce));
     }
@@ -43,8 +43,8 @@ private:
     {
         apiResponce.source = makePrettyText(apiResponce.source);
         apiResponce.translation = makePrettyText(apiResponce.translation);
-        apiResponce.languageFrom = makePrettyLanguage(apiResponce.languageFrom);
-        apiResponce.languageTo = makePrettyLanguage(apiResponce.languageTo);
+        apiResponce.sourceLanguage = makePrettyLanguage(apiResponce.sourceLanguage);
+        apiResponce.targetLanguage = makePrettyLanguage(apiResponce.targetLanguage);
 
         return apiResponce;
     }

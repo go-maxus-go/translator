@@ -9,7 +9,7 @@ public:
     virtual ~ITranslationQueryBuilder() = default;
 
     virtual QString build(
-        QString languageFrom,
-        QString languageTo,
+        QString sourceLanguage,
+        QString targetLanguage,
         QString text) const = 0;
 };

@@ -18,7 +18,7 @@ TEST_CASE("Integration Test. Receive a responce after query is sent")
 
     auto isResponceCalled = false;
     auto responseCallback =
-        [&isResponceCalled, googleQuery](auto query, auto response) {
+        [&isResponceCalled, googleQuery](auto response, auto query) {
             isResponceCalled = true;
             REQUIRE(googleQuery == query);
             REQUIRE(!response.isEmpty());

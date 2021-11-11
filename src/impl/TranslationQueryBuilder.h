@@ -17,13 +17,13 @@ public:
     {}
 
     QString build(
-        QString languageFrom,
-        QString languageTo,
+        QString sourceLanguage,
+        QString targetLanguage,
         QString text) const override
     {
         QUrlQuery query;
         query.addQueryItem("q", text);
-        auto languagePair = QString("%1|%2").arg(languageFrom, languageTo);
+        auto languagePair = QString("%1|%2").arg(sourceLanguage, targetLanguage);
         query.addQueryItem("langpair", languagePair);
 
         const auto apiUrl = m_apiUrlProvider->apiUrl();

@@ -6,7 +6,7 @@
 struct ApiResponse
 {
     QString source;
-    QString languageFrom;
-    QString languageTo;
+    QString sourceLanguage;
+    QString targetLanguage;
     QString translation;
 };

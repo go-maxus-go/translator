@@ -12,7 +12,7 @@ class NetworkManager : public INetworkManager, QObject
 public:
     void sendQuery(
         QString query,
-        std::function<void(QString, QString)> responseCallback,
+        std::function<void(QByteArray, QString)> responseCallback,
         std::function<void(QString)> errorCallback = [](auto&&){}) override
     {
         ++m_activeQueryCount;
@@ -24,7 +24,7 @@ public:
                 const auto error = reply->error();
                 if (error == QNetworkReply::NetworkError::NoError) {
                     auto data = reply->readAll();
-                    responseCallback(query, QString::fromUtf8(data));
+                    responseCallback(data, query);
                 }
                 else
                     errorCallback(query);

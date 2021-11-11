@@ -3,6 +3,7 @@ TEMPLATE = app
 QT += core gui network widgets
 CONFIG += staticlib c++17
 
+HEADERS = $$files(*.h, true)
 SOURCES = $$files(*.cpp, true)
 
 INCLUDEPATH += \
