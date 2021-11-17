@@ -3,6 +3,8 @@
 #include <catch.hpp>
 
 
+// Data types
+
 struct Circle
 {
     double radius = 0;
@@ -13,6 +15,8 @@ struct Rectangle
     double width = 0;
     double height = 0;
 };
+
+// Painters
 
 struct CirclePainter
 {
@@ -39,29 +43,33 @@ struct RectanglePainter
     }
 };
 
+// Serializers
+
 struct CircleSerializer
 {
-    std::vector<std::byte> serialize(const Circle&)
+    std::string serialize(const Circle&)
     {
-        return std::vector<std::byte>{0};
+        return "Serialized circle";
+    }
+};
+
+struct CircleBinarySerializer
+{
+    std::string serialize(const Circle&)
+    {
+        return "Binary serialized circle";
     }
 };
 
 struct RectangleSerializer
 {
-    std::vector<std::byte> serialize(const Rectangle&)
+    std::string serialize(const Rectangle&)
     {
-        return std::vector<std::byte>{1};
+        return "Serialized rectangle";
     }
 };
 
-struct RectangleBinarySerializer
-{
-    std::vector<std::byte> serialize(const Rectangle&)
-    {
-        return std::vector<std::byte>{2};
-    }
-};
+// Type erasure
 
 class Shape
 {
@@ -70,7 +78,7 @@ class Shape
         virtual ~ShapeHolder() = default;
 
         virtual void paint() = 0;
-        virtual std::vector<std::byte> serialize() = 0;
+        virtual std::string serialize() = 0;
     };
 
     template<class ShapeType, class PainterType, class SerializerType>
@@ -90,7 +98,7 @@ class Shape
             painter.paint(shape);
         }
 
-        std::vector<std::byte> serialize() override
+        std::string serialize() override
         {
             return serializer.serialize(shape);
         }
@@ -100,7 +108,7 @@ class Shape
         SerializerType serializer;
     };
 
-public:
+public: // Type erasure public interface
     template<class ShapeType, class PainterType, class SerializerType>
     Shape(ShapeType&& shape, PainterType&& painter, SerializerType&& serializer)
     {
@@ -117,7 +125,7 @@ public:
         holder->paint();
     }
 
-    std::vector<std::byte> serialize()
+    std::string serialize()
     {
         return holder->serialize();
     }
@@ -127,14 +135,21 @@ private:
 };
 
 
-TEST_CASE("Trial of type erasure")
+TEST_CASE("Type erasure example", "[TEE]")
 {
     Shape circle{Circle{1.5}, CirclePainter{}, CircleSerializer{}};
-    Shape boldCircle{Circle{2}, CircleBoldPainter{}, CircleSerializer{}};
-    Shape rect{Rectangle{1, 2}, RectanglePainter{}, RectangleBinarySerializer{}};
+    Shape boldCircle{Circle{2}, CircleBoldPainter{}, CircleBinarySerializer{}};
+    Shape rect{Rectangle{1, 2}, RectanglePainter{}, RectangleSerializer{}};
 
+    std::cout << "Paint shapes" << std::endl;
     circle.paint();
     boldCircle.paint();
     rect.paint();
-    rect.serialize();
+
+    std::cout << std::endl;
+
+    std::cout << "Serialize shapes" << std::endl;
+    std::cout << "Circle serialization: " << circle.serialize() << std::endl;
+    std::cout << "Bold circle serialization: " << boldCircle.serialize() << std::endl;
+    std::cout << "Rect serialization: " << rect.serialize() << std::endl;
 }
