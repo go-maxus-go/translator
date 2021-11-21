@@ -4,7 +4,6 @@
 
 #include <fakeit.hpp>
 #include <mockitopp/mockitopp.hpp> // path to <mockitopp.hpp> doesn't work
-#include <mockitopp/matchers.hpp>
 
 
 using namespace fakeit;
@@ -32,14 +31,14 @@ TEST_CASE("A simple interface can be mocked and verified")
     Mock<SimpleInterface> fakeItMock;
     mock_object<SimpleInterface> mockitoppMock;
 
+    auto& fakeItObject = fakeItMock.get();
+    auto& mockitoppObject = mockitoppMock.getInstance();
+
     SECTION("A void function without input parameters can be mocked and verified")
     {
         // FakeIt has better error messages
         Fake(Method(fakeItMock, voidFunction));
         mockitoppMock(&SimpleInterface::voidFunction).when().thenReturn().exactly(1);
-
-        auto& fakeItObject = fakeItMock.get();
-        auto& mockitoppObject = mockitoppMock.getInstance();
 
         fakeItObject.voidFunction();
         mockitoppObject.voidFunction();
@@ -55,9 +54,6 @@ TEST_CASE("A simple interface can be mocked and verified")
         mockitoppMock(&SimpleInterface::voidFunctionWithParameters).when(0, "")
             .thenReturn().exactly(1);
 
-        auto& fakeItObject = fakeItMock.get();
-        auto& mockitoppObject = mockitoppMock.getInstance();
-
         fakeItObject.voidFunctionWithParameters(0, "");
         mockitoppObject.voidFunctionWithParameters(0, "");
 
@@ -69,9 +65,6 @@ TEST_CASE("A simple interface can be mocked and verified")
         Fake(OverloadedMethod(fakeItMock, overload, void(int)).Using(0));
         mockitoppMock(static_cast<void(SimpleInterface::*)(int)>(&SimpleInterface::overload))
             .when(0).thenReturn().exactly(1);
-
-        auto& fakeItObject = fakeItMock.get();
-        auto& mockitoppObject = mockitoppMock.getInstance();
 
         fakeItObject.overload(0);
         mockitoppObject.overload(0);
@@ -85,9 +78,6 @@ TEST_CASE("A simple interface can be mocked and verified")
         mockitoppMock(static_cast<void(SimpleInterface::*)(void)const>(&SimpleInterface::constOverload))
             .when().thenReturn().exactly(1);
 
-        auto& fakeItObject = fakeItMock.get();
-        auto& mockitoppObject = mockitoppMock.getInstance();
-
         std::as_const(fakeItObject).constOverload();
         std::as_const(mockitoppObject).constOverload();
 
@@ -98,9 +88,6 @@ TEST_CASE("A simple interface can be mocked and verified")
     {
         When(Method(fakeItMock, returnFunction)).AlwaysReturn(42);
         mockitoppMock(&SimpleInterface::returnFunction).when().thenReturn(42).exactly(1);
-
-        auto& fakeItObject = fakeItMock.get();
-        auto& mockitoppObject = mockitoppMock.getInstance();
 
         REQUIRE(fakeItObject.returnFunction() == 42);
         REQUIRE(mockitoppObject.returnFunction() == 42);
@@ -118,23 +105,23 @@ struct BaseInterface
 
 TEST_CASE("A single nested interface can be mocked and verified")
 {
-    struct NastyInterface : BaseInterface<int>
+    struct Interface : BaseInterface<int>
     {
-        virtual ~NastyInterface() = default;
+        virtual ~Interface() = default;
 
         virtual void verifyId() = 0;
     };
 
-    Mock<NastyInterface> fakeItMock;
-    mock_object<NastyInterface> mockitoppMock;
+    Mock<Interface> fakeItMock;
+    mock_object<Interface> mockitoppMock;
+
+    auto& fakeItObject = fakeItMock.get();
+    auto& mockitoppObject = mockitoppMock.getInstance();
 
     SECTION("A base interface function can be mocked and verified")
     {
         When(Method(fakeItMock, id)).AlwaysReturn(42);
-        mockitoppMock(&NastyInterface::id).when().thenReturn(42).exactly(1);
-
-        auto& fakeItObject = fakeItMock.get();
-        auto& mockitoppObject = mockitoppMock.getInstance();
+        mockitoppMock(&Interface::id).when().thenReturn(42).exactly(1);
 
         REQUIRE(fakeItObject.id() == 42);
         REQUIRE(mockitoppObject.id() == 42);
@@ -144,10 +131,7 @@ TEST_CASE("A single nested interface can be mocked and verified")
     SECTION("A child interface function can be mocked and verified")
     {
         Fake(Method(fakeItMock, verifyId));
-        mockitoppMock(&NastyInterface::verifyId).when().thenReturn().exactly(1);
-
-        auto& fakeItObject = fakeItMock.get();
-        auto& mockitoppObject = mockitoppMock.getInstance();
+        mockitoppMock(&Interface::verifyId).when().thenReturn().exactly(1);
 
         fakeItObject.verifyId();
         mockitoppObject.verifyId();
@@ -172,7 +156,7 @@ TEST_CASE("An interface inherited from a concrete type can be mocked and verifie
 
     Mock<Interface> fakeItMock;
 
-    // According to the documentation it is not not stable
+    // According to the documentation it is not stable
     mock_object<Interface> mockitoppMock;
 
     Fake(Method(fakeItMock, verifyId));
@@ -192,6 +176,8 @@ TEST_CASE("An interface inherited from several interfaces can be mocked and veri
     struct Disposable
     {
         virtual ~Disposable() = default;
+
+        virtual void dispose() = 0;
     };
 
     struct Interface : BaseInterface<float>, Disposable
@@ -201,19 +187,67 @@ TEST_CASE("An interface inherited from several interfaces can be mocked and veri
         virtual void verifyId() = 0;
     };
 
-    // FakeIt doesn't support it.
+    // FakeIt doesn't support it. Compilation error.
 //    Mock<Interface> fakeItMock;
+//    auto& fakeItObject = fakeItMock.get();
 
     mock_object<Interface> mockitoppMock;
-
-//    Fake(Method(fakeItMock, verifyId));
-    mockitoppMock(&Interface::verifyId).when().thenReturn().exactly(1);
-
-//    auto& fakeItObject = fakeItMock.get();
     auto& mockitoppObject = mockitoppMock.getInstance();
 
-//    fakeItObject.verifyId();
-    mockitoppObject.verifyId();
+    SECTION("The first interface method can be called and verified")
+    {
+        mockitoppMock(&Interface::id).when().thenReturn(42).exactly(1);
+        mockitoppObject.id();
+    }
 
-//    Verify(Method(fakeItMock, verifyId)).Once();
+    SECTION("The second interface method can be called and verified")
+    {
+        // Runtime error
+//        mockitoppMock(&Interface::dispose).when().thenReturn().exactly(1);
+//        mockitoppObject.dispose();
+    }
+
+    SECTION("The main interface method can be called and verified")
+    {
+        mockitoppMock(&Interface::verifyId).when().thenReturn().exactly(1);
+        mockitoppObject.verifyId();
+    }
+}
+
+TEST_CASE("An interface virtually inherited from an interface can be mocked and verified")
+{
+    struct Interface : virtual BaseInterface<int>
+    {
+        virtual ~Interface() = default;
+
+        virtual void verifyId() = 0;
+    };
+
+    // FakeIt doesn't support it. Compilation error.
+    Mock<Interface> fakeItMock;
+    auto& fakeItObject = fakeItMock.get();
+
+    mock_object<Interface> mockitoppMock;
+    auto& mockitoppObject = mockitoppMock.getInstance();
+
+    SECTION("A base interface method can be called and verified")
+    {
+        // Compile time error
+//        When(Method(fakeItMock, id)).Return(42);
+        mockitoppMock(&Interface::id).when().thenReturn(42).exactly(1);
+
+        // Runtime error
+//        REQUIRE(mockitoppObject.id() == 42);
+    }
+
+    SECTION("A main interface method can be called and verified")
+    {
+        Fake(Method(fakeItMock, verifyId));
+        mockitoppMock(&Interface::verifyId).when().thenReturn().exactly(1);
+
+        fakeItObject.verifyId();
+        mockitoppObject.verifyId();
+
+        Verify(Method(fakeItMock, verifyId)).Once();
+    }
 }
