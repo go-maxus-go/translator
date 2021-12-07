@@ -31,8 +31,8 @@ TEST_CASE("A simple interface can be mocked and verified")
     Mock<SimpleInterface> fakeItMock;
     mock_object<SimpleInterface> mockitoppMock;
 
-    auto& fakeItObject = fakeItMock.get();
-    auto& mockitoppObject = mockitoppMock.getInstance();
+    SimpleInterface& fakeItObject = fakeItMock.get();
+    SimpleInterface& mockitoppObject = mockitoppMock.getInstance();
 
     SECTION("A void function without input parameters can be mocked and verified")
     {
@@ -92,6 +92,31 @@ TEST_CASE("A simple interface can be mocked and verified")
         REQUIRE(fakeItObject.returnFunction() == 42);
         REQUIRE(mockitoppObject.returnFunction() == 42);
     }
+}
+
+TEST_CASE("An abstract class with concrete methods can be mocked and verified")
+{
+    struct StillAbstract
+    {
+        virtual ~StillAbstract() = default;
+
+        virtual void abstractMethod() = 0;
+        int concreteMethod() { return 42; }
+    };
+
+    Mock<StillAbstract> fakeItMock;
+    mock_object<StillAbstract> mockitoppMock;
+
+    StillAbstract& fakeItObject = fakeItMock.get();
+// Throws std::exception without any explanation
+//    StillAbstract& mockitoppObject = mockitoppMock.getInstance();
+
+    Fake(Method(fakeItMock, abstractMethod));
+
+    fakeItObject.abstractMethod();
+    REQUIRE(fakeItObject.concreteMethod() == 42);
+
+    Verify(Method(fakeItMock, abstractMethod)).Once();
 }
 
 
