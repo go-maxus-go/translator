@@ -7,7 +7,7 @@
 
 using namespace fakeit;
 
-TEST_CASE("FakeIt", "[FI]")
+SCENARIO("FakeIt all tests", "[FI]")
 {
     struct SomeInterface
     {
@@ -15,9 +15,6 @@ TEST_CASE("FakeIt", "[FI]")
 
         virtual int foo(int) = 0;
         virtual int bar(int, int) = 0;
-
-        virtual int mul(int a, int b) { return a * b; }
-        virtual int sum(int a, int b) { return a + b; }
     };
 
     Mock<SomeInterface> mock;
@@ -259,17 +256,5 @@ TEST_CASE("FakeIt", "[FI]")
             Verify(Method(mock,bar)).AtLeastOnce();
             VerifyNoOtherInvocations(mock);
         }
-    }
-
-    SECTION("Spy implemented methods invocation")
-    {
-        Method(mock,mul) = 10;
-        Spy(Method(mock,sum));
-
-        REQUIRE(mock().mul(1,2) == 10);
-        REQUIRE(mock().sum(1,2) == 3);
-
-        Verify(Method(mock,mul)).Once();
-        Verify(Method(mock,sum)).Once();
     }
 }
