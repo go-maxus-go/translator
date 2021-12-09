@@ -1,17 +1,16 @@
 #include <string>
 
 #include <catch.hpp>
-
 #include <fakeit.hpp>
 
 
 using namespace fakeit;
 
-SCENARIO("FakeIt all tests", "[FI]")
+SCENARIO("FakeIt all tests")
 {
     struct SomeInterface
     {
-        virtual ~SomeInterface() = 0;
+        virtual ~SomeInterface() = default;
 
         virtual int foo(int) = 0;
         virtual int bar(int, int) = 0;
@@ -28,6 +27,8 @@ SCENARIO("FakeIt all tests", "[FI]")
             SomeInterface& object = mock.get();
 
             REQUIRE(object.foo(42) == 1);
+            // REQUIRE(object.foo(42) == 1); // test failure
+            // object.bar(1, 2); // test failure
         }
 
         SECTION("Stub multiple return values")
@@ -59,6 +60,7 @@ SCENARIO("FakeIt all tests", "[FI]")
 
             for (int i = 0; i < 100; ++i)
                 REQUIRE(mock().foo(42) == 1);
+
             for (int i = 0; i < 200; ++i)
                 REQUIRE(mock().foo(42) == 2);
         }
@@ -75,6 +77,7 @@ SCENARIO("FakeIt all tests", "[FI]")
         SECTION("Just fake a method")
         {
             Fake(Method(mock,foo));
+
             mock().foo(42);
         }
     }
@@ -87,6 +90,8 @@ SCENARIO("FakeIt all tests", "[FI]")
             // Or When(Method(mock,foo)(1)).Return(100);
 
             REQUIRE(mock().foo(1) == 100);
+            // REQUIRE(mock().foo(1) == 100); // test failure
+            // mock().foo(2); // test failure
         }
 
         SECTION("Stub 'foo(1)' to always return '100'. For all other calls always return 0.")
@@ -143,6 +148,7 @@ SCENARIO("FakeIt all tests", "[FI]")
                 When(Method(mock,foo)).Throw(std::exception());
 
                 REQUIRE_THROWS_AS(mock().foo(42), std::exception);
+                // mock().foo(42); // test failure
             }
 
             SECTION("Throw several times")
@@ -198,11 +204,11 @@ SCENARIO("FakeIt all tests", "[FI]")
             REQUIRE_THROWS_AS(mock().foo(42), std::exception);
         }
 
-        SECTION("Fake destructor")
+        SECTION("Fake destructor throws an exception")
         {
             When(Dtor(mock)).Do([](){ throw std::exception(); });
 
-            REQUIRE_THROWS_AS(mock().~SomeInterface(), std::exception);
+            REQUIRE_THROWS_AS(delete &mock(), std::exception);
         }
     }
 
@@ -248,6 +254,15 @@ SCENARIO("FakeIt all tests", "[FI]")
             Verify(Method(mock,bar).
                 Matching([](int a, int b){ return a < b; })).
                 Exactly(Once);
+        }
+
+        SECTION("Verify destructor is called")
+        {
+            Fake(Dtor(mock));
+
+            delete &object;
+
+            Verify(Dtor(mock));
         }
 
         SECTION("Verify all invokations")

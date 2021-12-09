@@ -41,8 +41,6 @@ TEST_CASE("Translation query is valid. London style.")
     const auto text = "UniqueText";
     const auto query = builder.build(fromLanguage, toLanguage, text);
 
-    Verify(Method(apiUrlProviderMock, apiUrl)).AtLeastOnce();
-
     REQUIRE(!query.isEmpty());
     REQUIRE(query.startsWith(dummyApi));
     REQUIRE(query.contains(fromLanguage));
